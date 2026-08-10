@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cats-dogs-api
+  labels:
+    app: cats-dogs-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cats-dogs-api
+  template:
+    metadata:
+      labels:
+        app: cats-dogs-api
+    spec:
+      containers:
+        - name: cats-dogs-api
+          image: ghcr.io/OWNER/REPO/cats-dogs-mlops:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 20

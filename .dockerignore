@@ -1,0 +1,11 @@
+.git
+.github
+.venv
+__pycache__
+.pytest_cache
+mlruns
+data/raw
+data/processed
+notebooks
+tests
+*.log

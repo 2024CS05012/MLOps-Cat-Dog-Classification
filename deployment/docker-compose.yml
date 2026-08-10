@@ -1,0 +1,10 @@
+services:
+  cats-dogs-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: cats-dogs-mlops:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1

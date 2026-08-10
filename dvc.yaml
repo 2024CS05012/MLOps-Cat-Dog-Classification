@@ -1,0 +1,23 @@
+stages:
+  preprocess:
+    cmd: python scripts/preprocess_data.py
+    deps:
+      - data/raw
+      - scripts/preprocess_data.py
+      - src/data/preprocess.py
+    outs:
+      - data/processed
+  train:
+    cmd: python scripts/train_model.py --epochs 3 --batch-size 16
+    deps:
+      - data/processed
+      - scripts/train_model.py
+      - src/models/train.py
+      - src/models/model.py
+    outs:
+      - artifacts/models/best_model.pt
+      - artifacts/models/latest_model.pt
+    plots:
+      - artifacts/plots/loss_curve.png
+      - artifacts/plots/accuracy_curve.png
+      - artifacts/plots/confusion_matrix.png
