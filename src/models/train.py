@@ -6,7 +6,7 @@ import mlflow
 import torch
 from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, confusion_matrix
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset, Subset
 
 from src.config import CLASS_NAMES, MODEL_DIR, PLOTS_DIR, PROCESSED_DATA_DIR
 from src.data.dataset import image_folder_dataset
@@ -56,13 +56,34 @@ def save_curves(history: dict[str, list[float]], output_dir: Path) -> None:
         plt.close()
 
 
-def train_model(processed_dir: Path, epochs: int, batch_size: int, learning_rate: float) -> Path:
+def limit_dataset(dataset: Dataset, max_samples: int | None) -> Dataset:
+    if max_samples is None or max_samples >= len(dataset):
+        return dataset
+    targets = getattr(dataset, "targets", None)
+    if targets is not None:
+        per_class = max(1, max_samples // len(CLASS_NAMES))
+        selected_indices: list[int] = []
+        for class_index in range(len(CLASS_NAMES)):
+            class_indices = [index for index, target in enumerate(targets) if target == class_index]
+            selected_indices.extend(class_indices[:per_class])
+        return Subset(dataset, selected_indices[:max_samples])
+    return Subset(dataset, range(max_samples))
+
+
+def train_model(
+    processed_dir: Path,
+    epochs: int,
+    batch_size: int,
+    learning_rate: float,
+    max_train_samples: int | None = None,
+    max_eval_samples: int | None = None,
+) -> Path:
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    train_dataset = image_folder_dataset(processed_dir, "train")
-    val_dataset = image_folder_dataset(processed_dir, "val")
-    test_dataset = image_folder_dataset(processed_dir, "test")
+    train_dataset = limit_dataset(image_folder_dataset(processed_dir, "train"), max_train_samples)
+    val_dataset = limit_dataset(image_folder_dataset(processed_dir, "val"), max_eval_samples)
+    test_dataset = limit_dataset(image_folder_dataset(processed_dir, "test"), max_eval_samples)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
@@ -77,7 +98,15 @@ def train_model(processed_dir: Path, epochs: int, batch_size: int, learning_rate
 
     mlflow.set_experiment("cats-dogs-classification")
     with mlflow.start_run():
-        mlflow.log_params({"epochs": epochs, "batch_size": batch_size, "learning_rate": learning_rate})
+        mlflow.log_params(
+            {
+                "epochs": epochs,
+                "batch_size": batch_size,
+                "learning_rate": learning_rate,
+                "max_train_samples": max_train_samples,
+                "max_eval_samples": max_eval_samples,
+            }
+        )
         for epoch in range(epochs):
             train_loss = train_one_epoch(model, train_loader, optimizer, criterion)
             val_loss, val_accuracy, _, _ = evaluate(model, val_loader, criterion)
@@ -102,7 +131,7 @@ def train_model(processed_dir: Path, epochs: int, batch_size: int, learning_rate
         torch.save({"model_state_dict": model.state_dict(), "class_names": CLASS_NAMES}, latest_path)
         test_loss, test_accuracy, y_true, y_pred = evaluate(model, test_loader, criterion)
         save_curves(history, PLOTS_DIR)
-        matrix = confusion_matrix(y_true, y_pred)
+        matrix = confusion_matrix(y_true, y_pred, labels=list(range(len(CLASS_NAMES))))
         ConfusionMatrixDisplay(matrix, display_labels=CLASS_NAMES).plot()
         plt.tight_layout()
         plt.savefig(PLOTS_DIR / "confusion_matrix.png")
@@ -119,9 +148,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--learning-rate", type=float, default=0.001)
+    parser.add_argument("--max-train-samples", type=int)
+    parser.add_argument("--max-eval-samples", type=int)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    train_model(args.processed_dir, args.epochs, args.batch_size, args.learning_rate)
+    train_model(
+        args.processed_dir,
+        args.epochs,
+        args.batch_size,
+        args.learning_rate,
+        args.max_train_samples,
+        args.max_eval_samples,
+    )

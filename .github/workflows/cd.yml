@@ -1,8 +1,10 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
     branches: [main]
+    types: [completed]
 
 permissions:
   contents: read
@@ -10,10 +12,13 @@ permissions:
 
 jobs:
   deploy-and-smoke-test:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,11 +28,25 @@ jobs:
       - name: Install smoke test dependencies
         run: pip install requests
 
-      - name: Build deployment image
-        run: docker build -t cats-dogs-mlops:latest .
+      - name: Set deployment image
+        run: |
+          REPOSITORY_LOWER="${GITHUB_REPOSITORY,,}"
+          echo "IMAGE_NAME=ghcr.io/${REPOSITORY_LOWER}/cats-dogs-mlops:latest" >> "$GITHUB_ENV"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull deployment image
+        run: docker pull "$IMAGE_NAME"
 
       - name: Deploy with Docker Compose
-        run: docker compose -f deployment/docker-compose.yml up -d
+        run: docker compose -f deployment/docker-compose.yml up -d --no-build
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
 
       - name: Wait for API
         run: sleep 15

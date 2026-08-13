@@ -83,11 +83,11 @@ path = kagglehub.dataset_download("bhavikjikadara/dog-and-cat-classification-dat
 print("Path to dataset files:", path)
 ```
 
-Then run:
+Then version the raw image folders with DVC and run the reproducible pipeline:
 
 ```bash
 dvc init
-dvc add data/raw
+dvc add data/raw/cat data/raw/dog
 dvc repro
 ```
 
@@ -131,9 +131,18 @@ Docker Compose:
 docker compose -f deployment/docker-compose.yml up --build
 ```
 
+CI/CD deployment pulls the latest image published to GitHub Container Registry:
+
+```bash
+export IMAGE_NAME=ghcr.io/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY/cats-dogs-mlops:latest
+docker pull "$IMAGE_NAME"
+docker compose -f deployment/docker-compose.yml up -d --no-build
+```
+
 Kubernetes:
 
 ```bash
+# Replace YOUR_GITHUB_USERNAME/YOUR_REPOSITORY in deployment/k8s/deployment.yaml first.
 kubectl apply -f deployment/k8s/
 ```
 
@@ -146,6 +155,6 @@ python3 scripts/smoke_test.py --base-url http://localhost:8000 --image data/samp
 ## Final Submission Checklist
 
 - Commit source code and config files to Git.
-- Track `data/raw`, `data/processed`, and large model artifacts using DVC or Git LFS.
-- Include trained model artifacts or DVC remote access instructions.
+- Commit DVC metadata, including `data/raw/cat.dvc`, `data/raw/dog.dvc`, `dvc.yaml`, and `dvc.lock`.
+- Include trained model artifacts in the final zip, or include DVC remote/cache access instructions so `dvc pull` can restore them.
 - Export a short screen recording showing code change, CI/CD run, deployment, health check, and prediction.

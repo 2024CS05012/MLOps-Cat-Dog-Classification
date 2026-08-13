@@ -1,0 +1,6 @@
+outs:
+- md5: b997c8af1a1cea6387367948eef1ddb3.dir
+  size: 388422190
+  nfiles: 12499
+  hash: md5
+  path: cat

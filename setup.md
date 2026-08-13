@@ -73,6 +73,12 @@ print(path)
 
 ## 6) Preprocess the data
 
+Track the raw dataset folders with DVC:
+
+```bash
+dvc add data/raw/cat data/raw/dog
+```
+
 ```bash
 python scripts/preprocess_data.py
 ```
@@ -123,14 +129,16 @@ docker build -t cats-dogs-mlops:latest .
 docker run -p 8000:8000 cats-dogs-mlops:latest
 ```
 
+For the CI/CD flow, GitHub Actions publishes the image to GitHub Container Registry and the CD workflow pulls that image before Docker Compose deployment.
+
 ## 12) Important for assignment submission
 
-Do not upload the large generated files in the zip package. The expected workflow is:
+The source zip should include all code, configs, CI/CD workflows, deployment manifests, DVC metadata, and trained model artifacts. If the upload size limit prevents including large artifacts, include clear DVC remote/cache restoration instructions and demonstrate the artifacts in the screen recording.
+
+The expected reproducible workflow is:
 
 1. Download repository code
 2. Create environment
 3. Add Kaggle credentials locally
 4. Download dataset and train model locally
 5. Run tests and smoke checks
-
-This keeps the submission small and ensures the grader or evaluator can reproduce the project from source instructions alone.

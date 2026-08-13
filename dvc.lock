@@ -1,0 +1,66 @@
+schema: '2.0'
+stages:
+  preprocess:
+    cmd: python3 scripts/preprocess_data.py
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 2e75d71055311e811d874a152e8a525b.dir
+      size: 848866627
+      nfiles: 25001
+    - path: scripts/preprocess_data.py
+      hash: md5
+      md5: 5eb56bd4b8ea95ff259639b694347b7d
+      size: 666
+    - path: src/data/preprocess.py
+      hash: md5
+      md5: 0f0cfaf279c0db373073e667dbe8ebbf
+      size: 2345
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 7c842277e3911f2f604356027f3c093f.dir
+      size: 521750603
+      nfiles: 24998
+  train:
+    cmd: python3 scripts/train_model.py --epochs 1 --batch-size 8 
+      --max-train-samples 256 --max-eval-samples 64
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 7c842277e3911f2f604356027f3c093f.dir
+      size: 521750603
+      nfiles: 24998
+    - path: scripts/train_model.py
+      hash: md5
+      md5: e68f7379728481cf950b1b8eecd1861b
+      size: 463
+    - path: src/models/model.py
+      hash: md5
+      md5: 59fa926d71d9bf13d4b67819098da7ac
+      size: 848
+    - path: src/models/train.py
+      hash: md5
+      md5: 8659834385bdd2dccd4d417fb05c341c
+      size: 6687
+    outs:
+    - path: artifacts/models/best_model.pt
+      hash: md5
+      md5: 440d2140e005093cde5fb40972657c7c
+      size: 25790178
+    - path: artifacts/models/latest_model.pt
+      hash: md5
+      md5: 5f363ea3ac103670d769081766f31a49
+      size: 25790206
+    - path: artifacts/plots/accuracy_curve.png
+      hash: md5
+      md5: b5e4bba4f612a9dc87a3abf8a10e38c0
+      size: 15238
+    - path: artifacts/plots/confusion_matrix.png
+      hash: md5
+      md5: 4e384ce33acbee1a22d30fa7ee299a46
+      size: 17250
+    - path: artifacts/plots/loss_curve.png
+      hash: md5
+      md5: 20ff39b2663b5135718ddb01f92c36ac
+      size: 14520

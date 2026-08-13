@@ -1,6 +1,6 @@
 stages:
   preprocess:
-    cmd: python scripts/preprocess_data.py
+    cmd: python3 scripts/preprocess_data.py
     deps:
       - data/raw
       - scripts/preprocess_data.py
@@ -8,7 +8,7 @@ stages:
     outs:
       - data/processed
   train:
-    cmd: python scripts/train_model.py --epochs 3 --batch-size 16
+    cmd: python3 scripts/train_model.py --epochs 1 --batch-size 8 --max-train-samples 256 --max-eval-samples 64
     deps:
       - data/processed
       - scripts/train_model.py

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: cats-dogs-api
-          image: ghcr.io/OWNER/REPO/cats-dogs-mlops:latest
+          image: ghcr.io/2024CS05012/CatDogClassification/cats-dogs-mlops:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

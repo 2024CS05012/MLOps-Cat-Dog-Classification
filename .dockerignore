@@ -1,8 +1,12 @@
 .git
 .github
+.dvc/cache
+.dvc/tmp
+.kaggle
 .venv
 __pycache__
 .pytest_cache
+.DS_Store
 mlruns
 data/raw
 data/processed

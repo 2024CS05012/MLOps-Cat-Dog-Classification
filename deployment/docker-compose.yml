@@ -3,7 +3,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    image: cats-dogs-mlops:latest
+    image: ${IMAGE_NAME:-cats-dogs-mlops:latest}
     ports:
       - "8000:8000"
     environment:

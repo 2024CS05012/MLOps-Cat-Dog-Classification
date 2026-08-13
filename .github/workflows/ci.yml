@@ -27,11 +27,14 @@ jobs:
       - name: Run unit tests
         run: pytest
 
-      - name: Set image name
-        run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY}/cats-dogs-mlops:${GITHUB_SHA}" >> "$GITHUB_ENV"
+      - name: Set image names
+        run: |
+          REPOSITORY_LOWER="${GITHUB_REPOSITORY,,}"
+          echo "IMAGE_NAME_SHA=ghcr.io/${REPOSITORY_LOWER}/cats-dogs-mlops:${GITHUB_SHA}" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME_LATEST=ghcr.io/${REPOSITORY_LOWER}/cats-dogs-mlops:latest" >> "$GITHUB_ENV"
 
       - name: Build Docker image
-        run: docker build -t "$IMAGE_NAME" .
+        run: docker build -t "$IMAGE_NAME_SHA" -t "$IMAGE_NAME_LATEST" .
 
       - name: Login to GHCR
         if: github.event_name == 'push'
@@ -43,4 +46,6 @@ jobs:
 
       - name: Push Docker image
         if: github.event_name == 'push'
-        run: docker push "$IMAGE_NAME"
+        run: |
+          docker push "$IMAGE_NAME_SHA"
+          docker push "$IMAGE_NAME_LATEST"
