@@ -48,18 +48,6 @@ chmod 600 ~/.kaggle/kaggle.json
 
 Replace the placeholder values with your actual Kaggle username and API key.
 
-### Alternative local-only method for this assignment
-
-If you are using a plain token file locally, you may also keep it in the project folder:
-
-```bash
-mkdir -p .kaggle
-printf '%s\n' "YOUR_KAGGLE_TOKEN" > .kaggle/access_token
-chmod 600 .kaggle/access_token
-```
-
-This folder is already ignored by Git in `.gitignore`.
-
 ## 5) Download the dataset
 
 From the project root, run:

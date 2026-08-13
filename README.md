@@ -59,14 +59,20 @@ pip install -r requirements.txt
 python scripts/download_kaggle_dataset.py --dataset-name bhavikjikadara/dog-and-cat-classification-dataset --output-dir data/raw
 ```
 
-Keep your local Kaggle token outside the repository, for example:
+Keep your local Kaggle credentials outside the repository using the standard Kaggle JSON file:
 
 ```bash
-mkdir -p .kaggle
-chmod 600 .kaggle/access_token
+mkdir -p ~/.kaggle
+cat > ~/.kaggle/kaggle.json <<'JSON'
+{
+  "username": "YOUR_KAGGLE_USERNAME",
+  "key": "YOUR_KAGGLE_API_KEY"
+}
+JSON
+chmod 600 ~/.kaggle/kaggle.json
 ```
 
-The repo ignores `.kaggle/` via `.gitignore`, so this token stays local only.
+The repo ignores `.kaggle/` via `.gitignore`, so this file stays local only.
 
 Alternatively, if you prefer the direct Kaggle API snippet:
 
