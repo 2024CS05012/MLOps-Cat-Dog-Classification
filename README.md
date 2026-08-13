@@ -44,12 +44,37 @@ Download the Kaggle Cats and Dogs dataset and place it in `data/raw/` with this 
 
 ```text
 data/raw/
-├── cats/
+├── cat/
 │   ├── cat_001.jpg
 │   └── ...
-└── dogs/
+└── dog/
     ├── dog_001.jpg
     └── ...
+```
+
+You can use the built-in Kaggle downloader in this project:
+
+```bash
+pip install -r requirements.txt
+python scripts/download_kaggle_dataset.py --dataset-name bhavikjikadara/dog-and-cat-classification-dataset --output-dir data/raw
+```
+
+Keep your local Kaggle token outside the repository, for example:
+
+```bash
+mkdir -p .kaggle
+chmod 600 .kaggle/access_token
+```
+
+The repo ignores `.kaggle/` via `.gitignore`, so this token stays local only.
+
+Alternatively, if you prefer the direct Kaggle API snippet:
+
+```python
+import kagglehub
+
+path = kagglehub.dataset_download("bhavikjikadara/dog-and-cat-classification-dataset")
+print("Path to dataset files:", path)
 ```
 
 Then run:

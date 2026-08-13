@@ -50,7 +50,12 @@ def preprocess_dataset(raw_dir: Path, processed_dir: Path) -> None:
         image_files = sorted(
             path for path in class_dir.iterdir() if path.suffix.lower() in {".jpg", ".jpeg", ".png"}
         )
+        if not image_files:
+            raise FileNotFoundError(f"No image files found in {class_dir}")
+
         for split_name, split_paths in split_files(image_files).items():
+            output_dir = processed_dir / split_name / class_name
+            output_dir.mkdir(parents=True, exist_ok=True)
             for index, input_path in enumerate(split_paths):
-                output_path = processed_dir / split_name / class_name / f"{class_name}_{index:05d}.jpg"
+                output_path = output_dir / f"{class_name}_{index:05d}{input_path.suffix.lower()}"
                 preprocess_image_file(input_path, output_path)
