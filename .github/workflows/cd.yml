@@ -29,8 +29,15 @@ jobs:
         run: pip install requests
 
       - name: Restore DVC metadata/artifacts for smoke inputs
+        env:
+          DVC_REMOTE_NAME: ${{ secrets.DVC_REMOTE_NAME || 'storage' }}
+          DVC_REMOTE_URL: ${{ secrets.DVC_REMOTE_URL }}
         run: |
           pip install dvc==3.58.0
+          if [ -n "$DVC_REMOTE_URL" ]; then
+            dvc remote remove "$DVC_REMOTE_NAME" >/dev/null 2>&1 || true
+            dvc remote add -d "$DVC_REMOTE_NAME" "$DVC_REMOTE_URL"
+          fi
           dvc pull || true
 
       - name: Set deployment image

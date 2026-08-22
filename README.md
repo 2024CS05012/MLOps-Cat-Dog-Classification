@@ -102,6 +102,9 @@ dvc remote add -d storage <your-dvc-remote-url>
 dvc push
 ```
 
+For GitHub Actions, create repository secrets named `DVC_REMOTE_URL` and optionally `DVC_REMOTE_NAME`.
+The workflow will configure the DVC remote automatically before `dvc pull` is attempted.
+
 If you do not use a DVC remote, configure GitHub repository secrets named `KAGGLE_USERNAME`
 and `KAGGLE_KEY`. The CI workflow will download the Kaggle dataset and run `dvc repro` to
 rebuild the model artifacts before testing and building the Docker image.

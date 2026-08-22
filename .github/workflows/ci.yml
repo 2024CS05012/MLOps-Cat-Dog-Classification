@@ -28,8 +28,17 @@ jobs:
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          DVC_REMOTE_NAME: ${{ secrets.DVC_REMOTE_NAME || 'storage' }}
+          DVC_REMOTE_URL: ${{ secrets.DVC_REMOTE_URL }}
         run: |
           set +e
+
+          if [ -n "$DVC_REMOTE_URL" ]; then
+            echo "Configuring DVC remote $DVC_REMOTE_NAME from GitHub secret..."
+            dvc remote remove "$DVC_REMOTE_NAME" >/dev/null 2>&1 || true
+            dvc remote add -d "$DVC_REMOTE_NAME" "$DVC_REMOTE_URL"
+          fi
+
           dvc pull
           pull_status=$?
 
