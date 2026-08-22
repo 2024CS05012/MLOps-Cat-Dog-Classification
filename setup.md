@@ -97,6 +97,36 @@ python scripts/train_model.py --epochs 3 --batch-size 16
 
 The trained model and plots are saved under the `artifacts/` folder.
 
+## 7.1) Configure artifact restoration for CI/CD
+
+The Docker image must include `artifacts/models/best_model.pt`. Because large artifacts are
+ignored by Git, choose one of these CI restoration options:
+
+### Option A: DVC remote
+
+```bash
+dvc remote add -d storage <your-dvc-remote-url>
+dvc push
+```
+
+Then GitHub Actions can restore the dataset, processed data, plots, and model with:
+
+```bash
+dvc pull
+```
+
+### Option B: Kaggle secrets fallback
+
+If you do not configure a DVC remote, add these GitHub repository secrets:
+
+```text
+KAGGLE_USERNAME
+KAGGLE_KEY
+```
+
+The CI workflow will use those secrets to download the dataset and run `dvc repro` before
+running tests and building the Docker image.
+
 ## 8) Run tests
 
 ```bash

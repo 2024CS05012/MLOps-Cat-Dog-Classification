@@ -93,6 +93,19 @@ dvc repro
 
 The DVC pipeline preprocesses images to 224x224 RGB and splits them into train, validation, and test folders.
 
+For CI/CD, the Docker image build expects the trained checkpoint at `artifacts/models/best_model.pt`.
+Use one of these restoration paths before the image build:
+
+```bash
+# Preferred: configure and push a DVC remote.
+dvc remote add -d storage <your-dvc-remote-url>
+dvc push
+```
+
+If you do not use a DVC remote, configure GitHub repository secrets named `KAGGLE_USERNAME`
+and `KAGGLE_KEY`. The CI workflow will download the Kaggle dataset and run `dvc repro` to
+rebuild the model artifacts before testing and building the Docker image.
+
 ## Training
 
 ```bash

@@ -24,6 +24,30 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Restore or rebuild DVC artifacts
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          if dvc pull; then
+            echo "Restored artifacts from DVC remote."
+            exit 0
+          fi
+
+          if [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; then
+            echo "DVC pull failed and Kaggle secrets are not configured."
+            echo "Configure a DVC remote, or add KAGGLE_USERNAME and KAGGLE_KEY repository secrets."
+            exit 1
+          fi
+
+          mkdir -p ~/.kaggle
+          printf '{"username":"%s","key":"%s"}' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+          python scripts/download_kaggle_dataset.py \
+            --dataset-name bhavikjikadara/dog-and-cat-classification-dataset \
+            --output-dir data/raw
+          dvc repro
+
       - name: Run unit tests
         run: pytest
 

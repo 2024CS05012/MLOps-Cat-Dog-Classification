@@ -28,6 +28,11 @@ jobs:
       - name: Install smoke test dependencies
         run: pip install requests
 
+      - name: Restore DVC metadata/artifacts for smoke inputs
+        run: |
+          pip install dvc==3.58.0
+          dvc pull || true
+
       - name: Set deployment image
         run: |
           REPOSITORY_LOWER="${GITHUB_REPOSITORY,,}"

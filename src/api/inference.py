@@ -19,10 +19,14 @@ def preprocessing_transform() -> transforms.Compose:
 
 
 def load_model(model_path: Path = MODEL_PATH) -> SimpleCNN:
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"Trained model not found at {model_path}. "
+            "Run `dvc pull` or `dvc repro` before starting the inference service."
+        )
     model = SimpleCNN(num_classes=len(CLASS_NAMES))
-    if model_path.exists():
-        checkpoint = torch.load(model_path, map_location="cpu")
-        model.load_state_dict(checkpoint["model_state_dict"])
+    checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+    model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
     return model
 
