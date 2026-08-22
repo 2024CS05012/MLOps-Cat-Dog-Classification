@@ -1,7 +1,7 @@
 import logging
 from io import BytesIO
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image
 from starlette.requests import Request
 
@@ -14,7 +14,17 @@ configure_logging()
 logger = logging.getLogger("cats-dogs-api")
 
 app = FastAPI(title="Cats vs Dogs Classifier", version="1.0.0")
-model = load_model()
+model = None
+
+
+@app.on_event("startup")
+def startup_event() -> None:
+    global model
+    try:
+        model = load_model()
+    except FileNotFoundError:
+        logger.warning("Model artifact not found at startup; API will remain healthy but prediction is unavailable.")
+        model = None
 
 
 @app.middleware("http")
@@ -48,6 +58,9 @@ def app_metrics() -> dict[str, float | int]:
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(file: UploadFile = File(...)) -> PredictionResponse:
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model is not available. Restore or rebuild the trained checkpoint before calling /predict.")
+
     contents = await file.read()
     image = Image.open(BytesIO(contents))
     prediction = predict_image(model, image)
