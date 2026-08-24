@@ -26,7 +26,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install smoke test dependencies
-        run: pip install requests
+        run: pip install -r requirements.txt
 
       - name: Restore DVC metadata/artifacts for smoke inputs
         env:
