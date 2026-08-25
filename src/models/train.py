@@ -115,6 +115,13 @@ def train_model(
             history["val_loss"].append(val_loss)
             history["train_accuracy"].append(train_accuracy)
             history["val_accuracy"].append(val_accuracy)
+            print(
+                f"Epoch {epoch + 1}/{epochs} | "
+                f"train_loss={train_loss:.4f} | "
+                f"val_loss={val_loss:.4f} | "
+                f"train_accuracy={train_accuracy:.4f} | "
+                f"val_accuracy={val_accuracy:.4f}"
+            )
             mlflow.log_metrics(
                 {
                     "train_loss": train_loss,
