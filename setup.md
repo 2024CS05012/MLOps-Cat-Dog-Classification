@@ -27,6 +27,9 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+The Docker inference image intentionally uses the smaller `requirements-api.txt` file. Keep
+`requirements.txt` for training, DVC, MLflow, testing, and CI jobs.
+
 ## 4) Configure Kaggle credentials
 
 IMPORTANT: do not commit these credentials to Git.
@@ -73,13 +76,14 @@ print(path)
 
 ## 6) Initialize DVC and preprocess the data
 
-Because the submission is intentionally kept small and the local cache/artifacts are not committed, initialize DVC in the project before tracking the dataset and running the pipeline:
+This repository already contains DVC metadata. If you are starting from a fresh zip without the `.dvc/`
+directory, initialize DVC once:
 
 ```bash
 dvc init
 ```
 
-Then track the raw dataset folders with DVC:
+Track the raw dataset folders with DVC after downloading the dataset:
 
 ```bash
 dvc add data/raw/cat data/raw/dog
@@ -110,32 +114,42 @@ This output is intentionally not committed in the assignment package, so the tea
 ## 7.1) Configure artifact restoration for CI/CD
 
 The Docker image must include `artifacts/models/best_model.pt`. Because large artifacts are
-ignored by Git, choose one of these CI restoration options:
+ignored by Git and no external DVC remote URL is used for this submission, CI regenerates
+the artifacts from the public Kaggle dataset.
 
-### Option A: DVC remote
+### Selected option: Kaggle secrets fallback
 
-```bash
-dvc remote add -d storage <your-dvc-remote-url>
-dvc push
-```
-
-Then GitHub Actions can restore the dataset, processed data, plots, and model with:
-
-```bash
-dvc pull
-```
-
-### Option B: Kaggle secrets fallback
-
-If you do not configure a DVC remote, add these GitHub repository secrets:
+Add these GitHub repository secrets:
 
 ```text
 KAGGLE_USERNAME
 KAGGLE_KEY
 ```
 
-The CI workflow will use those secrets to download the dataset and run `dvc repro` before
-running tests and building the Docker image.
+The CI workflow uses those secrets to download the dataset and run `dvc repro` before running
+tests and building the Docker image. The workflow fails clearly when neither a DVC remote nor
+Kaggle credentials are available, because the Docker image must contain
+`artifacts/models/best_model.pt`.
+
+### Optional later: DVC remote
+
+If you later get cloud/object storage, configure it as a DVC remote:
+
+```bash
+dvc remote add -d storage <your-dvc-remote-url>
+dvc push
+```
+
+Before submission, verify the local DVC state is reproducible:
+
+```bash
+dvc repro
+dvc status
+```
+
+`dvc status` should report that the pipeline is up to date. If it reports outputs that are
+not in cache, run `dvc commit` after confirming the current generated artifacts are the
+intended assignment artifacts. Run `dvc push` only if a DVC remote is configured.
 
 ## 8) Run tests
 
@@ -196,8 +210,8 @@ The expected reproducible workflow is:
 1. Download repository code
 2. Create environment
 3. Add Kaggle credentials locally
-4. Initialize DVC (`dvc init`)
-5. Download dataset and track it with DVC
+4. Download dataset with Kaggle credentials
+5. Track raw data metadata with DVC
 6. Preprocess data
 7. Train model locally
 8. Run tests and smoke checks

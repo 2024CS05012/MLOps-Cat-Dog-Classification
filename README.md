@@ -94,20 +94,15 @@ dvc repro
 The DVC pipeline preprocesses images to 224x224 RGB and splits them into train, validation, and test folders.
 
 For CI/CD, the Docker image build expects the trained checkpoint at `artifacts/models/best_model.pt`.
-Use one of these restoration paths before the image build:
+This project uses the Kaggle credentials fallback for CI artifact regeneration, so no external
+DVC remote URL is required.
 
-```bash
-# Preferred: configure and push a DVC remote.
-dvc remote add -d storage <your-dvc-remote-url>
-dvc push
-```
+Configure GitHub repository secrets named `KAGGLE_USERNAME` and `KAGGLE_KEY`. The CI workflow
+will download the public Kaggle dataset and run `dvc repro` to rebuild the processed data,
+trained model, plots, and other pipeline outputs before testing and building the Docker image.
 
-For GitHub Actions, create repository secrets named `DVC_REMOTE_URL` and optionally `DVC_REMOTE_NAME`.
-The workflow will configure the DVC remote automatically before `dvc pull` is attempted.
-
-If you do not use a DVC remote, configure GitHub repository secrets named `KAGGLE_USERNAME`
-and `KAGGLE_KEY`. The CI workflow will download the Kaggle dataset and run `dvc repro` to
-rebuild the model artifacts before testing and building the Docker image.
+A DVC remote can still be added later with `DVC_REMOTE_URL` if cloud artifact storage becomes
+available, but it is optional for this submission.
 
 ## Training
 
@@ -172,5 +167,5 @@ python3 scripts/smoke_test.py --base-url http://localhost:8000 --image data/samp
 
 - Commit source code and config files to Git.
 - Commit DVC metadata, including `data/raw/cat.dvc`, `data/raw/dog.dvc`, `dvc.yaml`, and `dvc.lock`.
-- Include trained model artifacts in the final zip, or include DVC remote/cache access instructions so `dvc pull` can restore them.
+- Include trained model artifacts in the final zip if allowed, or include the Kaggle-based regeneration instructions from `setup.md`.
 - Export a short screen recording showing code change, CI/CD run, deployment, health check, and prediction.

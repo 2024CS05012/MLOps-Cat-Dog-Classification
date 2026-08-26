@@ -5,9 +5,9 @@ stages:
     deps:
     - path: data/raw
       hash: md5
-      md5: 2e75d71055311e811d874a152e8a525b.dir
-      size: 848866627
-      nfiles: 25001
+      md5: acdc45acb9c6aba3d1d9ccc0f06c33df.dir
+      size: 848866626
+      nfiles: 25000
     - path: scripts/preprocess_data.py
       hash: md5
       md5: 5eb56bd4b8ea95ff259639b694347b7d
@@ -41,26 +41,26 @@ stages:
       size: 848
     - path: src/models/train.py
       hash: md5
-      md5: 8659834385bdd2dccd4d417fb05c341c
-      size: 6687
+      md5: ab92220595b2eae307636d029f9466a0
+      size: 6974
     outs:
     - path: artifacts/models/best_model.pt
       hash: md5
-      md5: 440d2140e005093cde5fb40972657c7c
+      md5: adb1a69f0460cc2e9a0000f289522c9e
       size: 25790178
     - path: artifacts/models/latest_model.pt
       hash: md5
-      md5: 5f363ea3ac103670d769081766f31a49
+      md5: 94e0f88ab5ff2ab03bfb2f4fbd51b96c
       size: 25790206
     - path: artifacts/plots/accuracy_curve.png
       hash: md5
-      md5: b5e4bba4f612a9dc87a3abf8a10e38c0
-      size: 15238
+      md5: 81c32cdc72498acb9d6c5b3bfff0aad0
+      size: 15939
     - path: artifacts/plots/confusion_matrix.png
       hash: md5
-      md5: 4e384ce33acbee1a22d30fa7ee299a46
-      size: 17250
+      md5: e06ddf3ad4bc62ce910c1626baa989ed
+      size: 14126
     - path: artifacts/plots/loss_curve.png
       hash: md5
-      md5: 20ff39b2663b5135718ddb01f92c36ac
-      size: 14520
+      md5: 7ad4fe0a376f260709bb16799c7a43f3
+      size: 13592

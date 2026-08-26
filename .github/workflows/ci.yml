@@ -51,8 +51,9 @@ jobs:
 
           if [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; then
             echo "No DVC remote configured and no Kaggle credentials available."
-            echo "Skipping DVC artifact restore for this PR run; tests will validate local code paths."
-            exit 0
+            echo "CI requires artifacts/models/best_model.pt before Docker build."
+            echo "Configure DVC_REMOTE_URL or KAGGLE_USERNAME/KAGGLE_KEY repository secrets."
+            exit 1
           fi
 
           mkdir -p ~/.kaggle
@@ -62,6 +63,9 @@ jobs:
             --dataset-name bhavikjikadara/dog-and-cat-classification-dataset \
             --output-dir data/raw
           dvc repro
+
+      - name: Verify model artifact for image build
+        run: test -f artifacts/models/best_model.pt
 
       - name: Run unit tests
         run: pytest
