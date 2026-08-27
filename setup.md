@@ -182,6 +182,21 @@ curl http://localhost:8001/health
 python scripts/smoke_test.py --base-url http://localhost:8000
 ```
 
+## 10.1) Post-deployment performance tracking
+
+After the service is running, collect a small labeled prediction batch:
+
+```bash
+python scripts/simulate_requests.py \
+  --base-url http://localhost:8000 \
+  --output artifacts/reports/post_deploy_predictions.json
+```
+
+The script uses images in `data/sample/` when available. If no sample images exist, it sends
+two synthetic labeled requests and stores the true labels, predicted labels, and class
+probabilities. The CD workflow runs this same command after deployment and uploads the JSON
+report as a GitHub Actions artifact.
+
 ## 11) Docker deployment
 
 ```bash

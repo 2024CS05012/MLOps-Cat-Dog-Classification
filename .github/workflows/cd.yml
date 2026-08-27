@@ -65,3 +65,12 @@ jobs:
 
       - name: Run smoke test
         run: python scripts/smoke_test.py --base-url http://localhost:8000
+
+      - name: Collect post-deployment prediction batch
+        run: python scripts/simulate_requests.py --base-url http://localhost:8000 --output artifacts/reports/post_deploy_predictions.json
+
+      - name: Upload post-deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-deployment-predictions
+          path: artifacts/reports/post_deploy_predictions.json

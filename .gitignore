@@ -17,6 +17,7 @@ artifacts/predictions/*
 !artifacts/predictions/.gitkeep
 artifacts/reports/*
 !artifacts/reports/.gitkeep
+!artifacts/reports/*.example.json
 data/raw/*
 !data/raw/.gitkeep
 !data/raw/*.dvc

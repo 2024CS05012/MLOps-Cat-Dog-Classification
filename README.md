@@ -10,7 +10,7 @@ End-to-end MLOps assignment project for binary image classification on the Kaggl
 | M2 Packaging and containerization | FastAPI service, `/health`, `/predict`, pinned requirements, Dockerfile |
 | M3 CI pipeline | Pytest tests, GitHub Actions CI, Docker build and optional registry push |
 | M4 CD and deployment | Docker Compose, Kubernetes manifests, GitHub Actions CD, smoke test |
-| M5 Monitoring and logs | Request logging middleware, in-app request/latency metrics, simulated post-deployment batch script |
+| M5 Monitoring and logs | Request logging middleware, in-app request/latency metrics, simulated post-deployment batch report uploaded by CD |
 
 ## Project Layout
 
@@ -162,6 +162,23 @@ kubectl apply -f deployment/k8s/
 ```bash
 python3 scripts/smoke_test.py --base-url http://localhost:8000 --image data/sample/cat.jpg
 ```
+
+## Post-Deployment Tracking
+
+The CD workflow runs a labeled simulated prediction batch after deployment and uploads the
+result as a GitHub Actions artifact named `post-deployment-predictions`.
+
+Run the same check locally with:
+
+```bash
+python3 scripts/simulate_requests.py \
+  --base-url http://localhost:8000 \
+  --output artifacts/reports/post_deploy_predictions.json
+```
+
+If `data/sample/` has no images, the script creates two synthetic labeled requests so the
+post-deployment tracking step still records true labels, predicted labels, and probabilities.
+An example output is committed at `artifacts/reports/post_deploy_predictions.example.json`.
 
 ## Final Submission Checklist
 

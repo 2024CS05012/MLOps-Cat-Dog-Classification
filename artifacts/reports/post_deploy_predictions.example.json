@@ -1,0 +1,20 @@
+[
+  {
+    "image": "simulated-cat.jpg",
+    "true_label": "cat",
+    "label": "cat",
+    "probabilities": {
+      "cat": 0.56,
+      "dog": 0.44
+    }
+  },
+  {
+    "image": "simulated-dog.jpg",
+    "true_label": "dog",
+    "label": "dog",
+    "probabilities": {
+      "cat": 0.47,
+      "dog": 0.53
+    }
+  }
+]
