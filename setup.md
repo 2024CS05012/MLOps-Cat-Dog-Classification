@@ -133,12 +133,9 @@ Kaggle credentials are available, because the Docker image must contain
 
 ### Optional later: DVC remote
 
-If you later get cloud/object storage, configure it as a DVC remote:
-
-```bash
-dvc remote add -d storage <your-dvc-remote-url>
-dvc push
-```
+If you later get cloud/object storage, you can configure it as a DVC remote and push the
+artifacts there. This is not required for the current submission because CI is configured
+to regenerate artifacts from Kaggle credentials.
 
 Before submission, verify the local DVC state is reproducible:
 
