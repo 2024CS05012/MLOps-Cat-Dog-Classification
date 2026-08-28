@@ -46,10 +46,15 @@ def save_curves(history: dict[str, list[float]], output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     for metric in ("loss", "accuracy"):
         plt.figure()
-        plt.plot(history[f"train_{metric}"], label=f"train_{metric}")
-        plt.plot(history[f"val_{metric}"], label=f"val_{metric}")
+        epochs = range(1, len(history[f"train_{metric}"]) + 1)
+        plt.plot(epochs, history[f"train_{metric}"], marker="o", label=f"train_{metric}")
+        plt.plot(epochs, history[f"val_{metric}"], marker="o", label=f"val_{metric}")
         plt.xlabel("epoch")
         plt.ylabel(metric)
+        plt.title(f"Train and validation {metric}")
+        plt.xticks(list(epochs))
+        if len(history[f"train_{metric}"]) == 1:
+            plt.xlim(0.5, 1.5)
         plt.legend()
         plt.tight_layout()
         plt.savefig(output_dir / f"{metric}_curve.png")
