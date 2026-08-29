@@ -25,12 +25,54 @@ Preprocessing:
 - Data is split into train, validation, and test sets using an `80% / 10% / 10%` split.
 - Processed data is stored under `data/processed`.
 
+Detailed preprocessing flow:
+
+1. `load_rgb_image()` opens each image, applies EXIF orientation correction using `ImageOps.exif_transpose()`, and converts the image to RGB.
+2. `resize_image()` resizes every image to `224x224` using bilinear interpolation.
+3. `preprocess_image_file()` creates the required output folder, applies loading/resizing, and saves the processed file as a JPEG with quality `95`.
+4. `split_files()` uses a fixed random seed, `42`, so the train/validation/test split is reproducible.
+5. `preprocess_dataset()` processes both classes and writes files into class-specific folders under each split.
+
+Processed folder structure:
+
+```text
+data/processed/
+├── train/
+│   ├── cat/
+│   └── dog/
+├── val/
+│   ├── cat/
+│   └── dog/
+└── test/
+    ├── cat/
+    └── dog/
+```
+
 Data augmentation:
 
 - Training data uses random horizontal flip.
 - Training data uses random rotation.
 - Training data uses color jitter.
 - Validation and test data use deterministic transforms only.
+
+Exact training transforms:
+
+```text
+RandomHorizontalFlip()
+RandomRotation(10)
+ColorJitter(brightness=0.1, contrast=0.1)
+Resize((224, 224))
+ToTensor()
+Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+```
+
+Validation and test transforms:
+
+```text
+Resize((224, 224))
+ToTensor()
+Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+```
 
 Relevant files:
 
@@ -78,6 +120,39 @@ DVC stages:
 | `preprocess` | Converts raw images into processed train/validation/test folders |
 | `train` | Trains the baseline CNN and generates model/plot artifacts |
 
+The `preprocess` stage depends on:
+
+- `data/raw`
+- `scripts/preprocess_data.py`
+- `src/data/preprocess.py`
+
+The `preprocess` stage outputs:
+
+- `data/processed`
+
+The `train` stage depends on:
+
+- `data/processed`
+- `scripts/train_model.py`
+- `src/models/train.py`
+- `src/models/model.py`
+
+The `train` stage outputs:
+
+- `artifacts/models/best_model.pt`
+- `artifacts/models/latest_model.pt`
+- `artifacts/plots/loss_curve.png`
+- `artifacts/plots/accuracy_curve.png`
+- `artifacts/plots/confusion_matrix.png`
+
+The lightweight DVC training command is:
+
+```bash
+python3 scripts/train_model.py --epochs 1 --batch-size 8 --max-train-samples 256 --max-eval-samples 64
+```
+
+This keeps CI/CD execution practical while still demonstrating the full reproducible pipeline.
+
 ### 4.2 Model Building
 
 The project implements a baseline convolutional neural network using PyTorch.
@@ -91,6 +166,23 @@ Training logic:
 - `src/models/train.py`
 - `scripts/train_model.py`
 
+Model architecture:
+
+| Layer block | Details |
+| --- | --- |
+| Convolution block 1 | `Conv2d(3, 16, kernel_size=3, padding=1)`, ReLU, MaxPool |
+| Convolution block 2 | `Conv2d(16, 32, kernel_size=3, padding=1)`, ReLU, MaxPool |
+| Convolution block 3 | `Conv2d(32, 64, kernel_size=3, padding=1)`, ReLU, MaxPool |
+| Classifier | Flatten, Dropout `0.3`, Linear, ReLU, Linear to 2 classes |
+
+Training details:
+
+- Optimizer: Adam
+- Loss function: CrossEntropyLoss
+- Best model selection: validation accuracy
+- Final evaluation: test loss and test accuracy
+- Dataset loader: `torchvision.datasets.ImageFolder`
+
 Saved model artifacts:
 
 - `artifacts/models/best_model.pt`
@@ -100,6 +192,12 @@ The model is serialized using PyTorch checkpoint format (`.pt`). The checkpoint 
 
 - model state dictionary
 - class names
+
+The model artifact is loaded during API startup from:
+
+```text
+artifacts/models/best_model.pt
+```
 
 ### 4.3 Experiment Tracking
 
@@ -120,6 +218,14 @@ The training process logs:
 - loss curve
 - accuracy curve
 - confusion matrix
+
+MLflow experiment name:
+
+```text
+cats-dogs-classification
+```
+
+MLflow is used inside `train_model()` with `mlflow.start_run()`, `mlflow.log_params()`, `mlflow.log_metrics()`, `mlflow.log_artifact()`, and `mlflow.log_artifacts()`.
 
 Generated visual artifacts:
 
@@ -155,6 +261,43 @@ The prediction endpoint accepts an image file and returns a response containing:
 - probability for `cat`
 - probability for `dog`
 
+API startup behavior:
+
+- On startup, the API attempts to load `artifacts/models/best_model.pt`.
+- If the model is available, `/health` returns `model_loaded: true`.
+- If the model file is missing, the API still starts, `/health` remains available, and `/predict` returns HTTP `503`.
+
+Prediction flow:
+
+1. The uploaded image is read as bytes.
+2. PIL opens the image.
+3. The image is converted to RGB.
+4. The inference transform resizes and normalizes it.
+5. The PyTorch model runs in `torch.no_grad()` mode.
+6. Softmax converts logits into class probabilities.
+7. The label with the highest probability is returned.
+
+Example health response:
+
+```json
+{
+  "status": "ok",
+  "model_loaded": true
+}
+```
+
+Example prediction response:
+
+```json
+{
+  "label": "cat",
+  "probabilities": {
+    "cat": 0.56,
+    "dog": 0.44
+  }
+}
+```
+
 ### 5.2 Environment Specification
 
 The project uses pinned dependencies for reproducibility.
@@ -184,6 +327,8 @@ The Docker image:
 - copies model artifacts from `artifacts/models`
 - verifies that `artifacts/models/best_model.pt` exists
 - starts the FastAPI service with Uvicorn
+
+The Dockerfile intentionally installs `requirements-api.txt` instead of the full `requirements.txt`. This avoids including training-only tools such as MLflow, DVC, Kaggle utilities, testing packages, and plotting packages inside the runtime image.
 
 Example local commands:
 
@@ -217,6 +362,14 @@ The tests cover:
 - API behavior when model artifact is unavailable
 - simulated post-deployment request generation
 
+Specific test examples:
+
+- `test_preprocess_image_file_resizes_and_converts_rgb` verifies that a grayscale input image becomes RGB and is resized to `224x224`.
+- `test_split_files_is_deterministic` verifies that the split is reproducible and follows the expected 8/1/1 split for 10 files.
+- `test_predict_image_returns_label_and_probabilities` verifies that inference returns a valid class label and probabilities summing to 1.
+- `test_health_endpoint` verifies the API health endpoint.
+- `test_predict_without_model_returns_503` verifies graceful behavior when the model artifact is missing.
+
 Local test result:
 
 ```text
@@ -247,6 +400,16 @@ CI steps:
 7. Builds the Docker image.
 8. Pushes the image to GitHub Container Registry on push events.
 
+CI artifact restoration strategy:
+
+- First, the workflow tries `dvc pull`.
+- If a DVC remote is configured through `DVC_REMOTE_URL`, it uses that remote.
+- If DVC pull fails, the workflow checks for `KAGGLE_USERNAME` and `KAGGLE_KEY`.
+- With Kaggle credentials, it downloads the dataset and runs `dvc repro`.
+- If neither DVC remote nor Kaggle credentials are available, CI fails clearly because the Docker image requires `artifacts/models/best_model.pt`.
+
+This makes the pipeline reproducible even when large artifacts are not committed to Git.
+
 ### 6.3 Artifact Publishing
 
 The CI pipeline publishes Docker images to GitHub Container Registry.
@@ -274,10 +437,26 @@ The Compose deployment:
 - exposes port `8000`
 - supports using the image published by CI/CD through the `IMAGE_NAME` environment variable
 
+Docker Compose deployment command:
+
+```bash
+docker compose -f deployment/docker-compose.yml up -d --no-build
+```
+
+In CD, the image is pulled from GHCR first, and Compose starts that exact image.
+
 Kubernetes manifests are also included as an optional deployment target:
 
 - `deployment/k8s/deployment.yaml`
 - `deployment/k8s/service.yaml`
+
+The Kubernetes deployment includes:
+
+- one API replica
+- container port `8000`
+- readiness probe on `/health`
+- liveness probe on `/health`
+- LoadBalancer service mapping port `80` to container port `8000`
 
 ### 7.2 CD Flow
 
@@ -315,6 +494,8 @@ The smoke test:
 - calls `/health`
 - sends one image to `/predict`
 - fails if either request fails
+
+If `data/sample/cat.jpg` is not available, the smoke test creates a synthetic `224x224` RGB JPEG image and uses that for prediction. This ensures the deployment validation can still run in CI/CD even when sample images are absent.
 
 Example command:
 
@@ -370,6 +551,11 @@ The script sends a small labeled batch to the deployed API and records:
 - predicted label
 - class probabilities
 
+If real sample images exist in `data/sample`, the script uses those files and infers the true label from the filename. If no sample images are present, it creates two synthetic labeled images:
+
+- `simulated-cat.jpg` with true label `cat`
+- `simulated-dog.jpg` with true label `dog`
+
 Example report:
 
 - `artifacts/reports/post_deploy_predictions.example.json`
@@ -403,6 +589,24 @@ Run the DVC pipeline:
 dvc repro
 ```
 
+Run only preprocessing:
+
+```bash
+python scripts/preprocess_data.py
+```
+
+Run only model training:
+
+```bash
+python scripts/train_model.py --epochs 3 --batch-size 16
+```
+
+Open MLflow locally:
+
+```bash
+mlflow ui
+```
+
 Run tests:
 
 ```bash
@@ -413,6 +617,24 @@ Run the API locally:
 
 ```bash
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+```
+
+Check health:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Make a prediction:
+
+```bash
+curl -X POST http://localhost:8000/predict -F "file=@data/raw/cat/9733.jpg"
+```
+
+View basic metrics:
+
+```bash
+curl http://localhost:8000/metrics
 ```
 
 Run smoke test:
@@ -473,6 +695,20 @@ For the screen recording, demonstrate the following flow:
 4. Call `/health`.
 5. Call `/predict`.
 6. Show the post-deployment prediction report or workflow artifact.
+
+Suggested screen recording timeline:
+
+| Time | What to show | What to say |
+| --- | --- | --- |
+| `0:00-0:30` | `report.md`, project folders | This is an end-to-end MLOps pipeline for Cats vs Dogs classification. |
+| `0:30-1:00` | `src/data/preprocess.py`, `src/data/dataset.py` | Images are converted to RGB, resized to 224x224, split reproducibly, and augmented during training. |
+| `1:00-1:30` | `src/models/model.py`, `src/models/train.py`, plots | The model is a baseline CNN tracked using MLflow with metrics and artifacts. |
+| `1:30-2:00` | `src/api/main.py` | FastAPI exposes health, prediction, and metrics endpoints. |
+| `2:00-2:30` | `pytest -q` | Unit tests validate preprocessing, inference, API behavior, and simulation. |
+| `2:30-3:15` | Make a small code change, commit, push | A code change triggers the CI workflow. |
+| `3:15-4:00` | GitHub Actions CI/CD pages | CI tests and builds the image; CD pulls, deploys, and smoke tests it. |
+| `4:00-4:45` | curl health/predict or CD logs | The deployed model returns a prediction and probabilities. |
+| `4:45-5:00` | Prediction report | Post-deployment labeled predictions are collected for tracking. |
 
 ## 12. Conclusion
 

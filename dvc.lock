@@ -41,26 +41,26 @@ stages:
       size: 848
     - path: src/models/train.py
       hash: md5
-      md5: ab92220595b2eae307636d029f9466a0
-      size: 6974
+      md5: 070a6fdb4aa6836086c4320e7c5f5ff7
+      size: 7242
     outs:
     - path: artifacts/models/best_model.pt
       hash: md5
-      md5: adb1a69f0460cc2e9a0000f289522c9e
+      md5: 25a57d26b077746dafc8488927b40a26
       size: 25790178
     - path: artifacts/models/latest_model.pt
       hash: md5
-      md5: 94e0f88ab5ff2ab03bfb2f4fbd51b96c
+      md5: 36ed35e58fe2f016a0a8b60f159cb574
       size: 25790206
     - path: artifacts/plots/accuracy_curve.png
       hash: md5
-      md5: 81c32cdc72498acb9d6c5b3bfff0aad0
-      size: 15939
+      md5: 15501176a7dd3f9d12ecbb53f5a9fe1d
+      size: 17709
     - path: artifacts/plots/confusion_matrix.png
       hash: md5
-      md5: e06ddf3ad4bc62ce910c1626baa989ed
-      size: 14126
+      md5: 99797f3b3d7ae312b9991fa953eb0584
+      size: 14850
     - path: artifacts/plots/loss_curve.png
       hash: md5
-      md5: 7ad4fe0a376f260709bb16799c7a43f3
-      size: 13592
+      md5: 6990b7c141a20abcc44dd41060ac01f9
+      size: 17828
