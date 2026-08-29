@@ -1,5 +1,25 @@
 # MLOps Pipeline Report: Cats vs Dogs Binary Image Classification
 
+# Student Details
+
+- **Name:** Shyam Gupta
+- **ID:** 2024CS05012
+- **Course:** MLOps (S2-25_AMLCSZG523)
+- **Assignment 02:** End-to-End ML Model Development, CI/CD, and Production Deployment Experimental Learning (Binary image classification (Cats vs Dogs) for a pet adoption platform)
+- **Total Marks:** 50
+
+---
+
+## Submission Details
+
+| Artifact | Location |
+| --- | --- |
+| **Public GitHub repository** | [https://github.com/2024CS05012/MLOps-Cat-Dog-Classification](https://github.com/2024CS05012/MLOps-Cat-Dog-Classification) |
+| **Demo video (Youtube)** | [https://youtu.be/pAf7N5pxf30](https://youtu.be/pAf7N5pxf30) |
+| **CI/CD workflow** | [https://github.com/2024CS05012/MLOps-Cat-Dog-Classification/actions](https://github.com/2024CS05012/MLOps-Cat-Dog-Classification/actions) |
+
+---
+
 ## 1. Project Overview
 
 This project implements an end-to-end MLOps pipeline for a binary image classification use case: identifying whether an uploaded pet image is a cat or a dog. The solution is designed for a pet adoption platform where model predictions can support image tagging or listing verification.
@@ -675,41 +695,9 @@ python scripts/simulate_requests.py \
 | Request/response logging | Covered | API middleware logging |
 | Basic metrics | Covered | `/metrics` endpoint |
 | Post-deployment prediction tracking | Covered | `scripts/simulate_requests.py` |
-| ZIP submission | To be prepared | Final packaging step |
-| Screen recording | To be prepared | Final demonstration step |
+| ZIP submission | Covered | Final packaging step |
+| Screen recording | Covered | Final demonstration step |
 
-## 11. Notes and Limitations
-
-Large files such as the full Kaggle dataset, processed image folders, local DVC cache, and trained model artifacts may be excluded from Git to keep the repository lightweight. The project includes setup instructions and CI fallback logic to regenerate required artifacts using Kaggle credentials.
-
-Before final submission, ensure that either:
-
-- the trained model artifact is included in the ZIP file, or
-- the evaluator can regenerate it using the documented setup process.
-
-For the screen recording, demonstrate the following flow:
-
-1. Make a small code change.
-2. Show CI running tests and building/pushing the Docker image.
-3. Show CD deploying the image.
-4. Call `/health`.
-5. Call `/predict`.
-6. Show the post-deployment prediction report or workflow artifact.
-
-Suggested screen recording timeline:
-
-| Time | What to show | What to say |
-| --- | --- | --- |
-| `0:00-0:30` | `report.md`, project folders | This is an end-to-end MLOps pipeline for Cats vs Dogs classification. |
-| `0:30-1:00` | `src/data/preprocess.py`, `src/data/dataset.py` | Images are converted to RGB, resized to 224x224, split reproducibly, and augmented during training. |
-| `1:00-1:30` | `src/models/model.py`, `src/models/train.py`, plots | The model is a baseline CNN tracked using MLflow with metrics and artifacts. |
-| `1:30-2:00` | `src/api/main.py` | FastAPI exposes health, prediction, and metrics endpoints. |
-| `2:00-2:30` | `pytest -q` | Unit tests validate preprocessing, inference, API behavior, and simulation. |
-| `2:30-3:15` | Make a small code change, commit, push | A code change triggers the CI workflow. |
-| `3:15-4:00` | GitHub Actions CI/CD pages | CI tests and builds the image; CD pulls, deploys, and smoke tests it. |
-| `4:00-4:45` | curl health/predict or CD logs | The deployed model returns a prediction and probabilities. |
-| `4:45-5:00` | Prediction report | Post-deployment labeled predictions are collected for tracking. |
-
-## 12. Conclusion
+## 11. Conclusion
 
 The project satisfies the core requirements of the assignment by implementing a complete MLOps workflow for binary image classification. It includes reproducible preprocessing and training, experiment tracking, containerized inference, automated testing, CI image creation and publishing, CD deployment, smoke testing, logging, basic metrics, and post-deployment prediction tracking.
